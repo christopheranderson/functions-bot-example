@@ -2,6 +2,7 @@ var builder = require('botbuilder');
 
 var bot = new builder.BotConnectorBot();
 
+// Handle "root" requests
 bot.add('/', new builder.CommandDialog()
     .matches('^set name', builder.DialogAction.beginDialog('/profile'))
     .matches('^quit', builder.DialogAction.endDialog())
@@ -16,7 +17,10 @@ bot.add('/', new builder.CommandDialog()
         function (session, results) {
             session.send('Hello %s!', session.userData.name);
         }
-    ]));
+    ])
+);
+
+// Handle "profile" requests
 bot.add('/profile', [
     function (session) {
         if (session.userData.name) {
@@ -29,18 +33,22 @@ bot.add('/profile', [
         session.userData.name = results.response;
         session.endDialog();
     }
-]);
+]
+);
 
-bot.on('error', function(message) {
+// On error, swallow them (TODO: Fix this...)
+bot.on('error', function (message) {
     console.log(message);
 })
 
+
+// Below is mostly all "copy & paste" code. This exposes your bot to the Functions HTTP Trigger
 var listen = bot.listen();
 
-var response = function(context) {
+var response = function (context) {
     return {
-        send: function(status, message) {
-            var _msg = message ? message : (typeof status !=='number' ? status : null)
+        send: function (status, message) {
+            var _msg = message ? message : (typeof status !== 'number' ? status : null)
             var _status = typeof status === 'number' ? status : 200
             var res = {
                 status: _status,
@@ -52,6 +60,6 @@ var response = function(context) {
     }
 }
 
-module.exports = function(context, req) {
+module.exports = function (context, req) {
     listen(req, response(context))
 }
